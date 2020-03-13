@@ -1,0 +1,91 @@
+service: fredagskakan
+
+frameworkVersion: '>=1.28.0 <2.0.0'
+
+provider:
+  name: aws
+  runtime: go1.x
+  region: eu-west-1
+
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:GetItem"
+        - "dynamodb:Query"
+        - "dynamodb:Scan"
+        - "dynamodb:PutItem"
+        - "dynamodb:UpdateItem"
+      Resource:
+        - "arn:aws:dynamodb:eu-west-1:*:table/kakor"
+        - "arn:aws:dynamodb:eu-west-1:*:table/votes"
+
+  apiKeys:
+    - vote1
+
+package:
+  exclude:
+    - ./**
+  include:
+    - ./bin/**
+
+functions:
+  thisweek:
+    handler: bin/thisweek
+    events:
+      - http:
+          path: /thisweek
+          method: get
+
+  getkaka:
+    handler: bin/getkaka
+    events:
+      - http:
+          path: /getkaka
+          method: get
+      - http:
+          path: /getkaka/{year}
+          method: get
+          parameters:
+            paths:
+              week: true
+      - http:
+          path: /getkaka/{year}/{week}
+          method: get
+          parameters:
+            paths:
+              year: true
+              week: true
+
+  vote:
+    handler: bin/vote
+    events:
+      - http:
+          path: /vote
+          method: post
+          private: true
+
+  score:
+    handler: bin/score
+    events:
+      - http:
+          path: /currentscore
+          method: get
+      - http:
+          path: /currentscore/{location}
+          method: get
+          parameters:
+            paths:
+              location: true
+
+  locations:
+    handler: bin/location
+    events:
+      - http:
+          path: /listlocations
+          method: get
+          parameters:
+            paths:
+              location: true
+
+
+
